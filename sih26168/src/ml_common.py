@@ -89,6 +89,32 @@ FEATURE_KEYS = [
 
 N_FEATURES = len(FEATURE_KEYS)  # 16
 
+# ──────────────────────────────────────────────────────────────
+# DEPLOYMENT-VALID (PHONE-ONLY) FEATURE SET
+# ──────────────────────────────────────────────────────────────
+# Audit of the 16 V0 features by availability during a GNSS-denied
+# smartphone-only deployment:
+#   available (phone IMU):  accel_x/y/z, gravity_x/y/z, gyro_pitch  (7)
+#   NOT available (GNSS-derived): phone_speed, phone_acc
+#   NOT available (vehicle CAN):  veh_velocity, veh_heading, veh_yaw_rate,
+#                                 steering, whl_fl/fr/rl            (7)
+#
+# The V0 checkpoint (trained on 16 features incl. CAN) is therefore NOT
+# compatible with a strict phone-only input vector. A phone-only retrain is
+# the minimum required experiment for deployment validity.
+#
+# Next experiment config (7 measured + 2 internal nav-state features):
+#   accel_x/y/z, gravity_x/y/z, gyro_pitch                     (measured)
+#   nav_speed_kmh, nav_heading_rad                             (internal state)
+# (gyro magnitude, accel magnitude as optional extra channels.)
+DEPLOYMENT_FEATURE_KEYS = [
+    "accel_x", "accel_y", "accel_z",
+    "gravity_x", "gravity_y", "gravity_z",
+    "gyro_pitch",
+    "nav_speed", "nav_heading",
+]
+DEPLOYMENT_N_FEATURES = len(DEPLOYMENT_FEATURE_KEYS)  # 9
+
 # Feature groups for normalization (accel-like vs angular vs rate-like)
 FEATURE_GROUPS = {
     "accel":   ["accel_x", "accel_y", "accel_z"],

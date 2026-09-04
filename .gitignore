@@ -37,3 +37,5 @@ Thumbs.db
 outputs/ml/best_model.pt
 outputs/ml/normalization.npz
 outputs/ml/training_log.csv
+outputs/kaggle_kernel/
+outputs/ml/recursive/

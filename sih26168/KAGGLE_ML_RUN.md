@@ -58,6 +58,36 @@ Expected output in `outputs/ml/`:
 - `ml_trajectory_{10,30,60,120}s.png` — trajectory comparison plots
 - `ml_velocity_residuals_30s.png` — correction signal analysis
 
+### Step 3 — Recursive (deployment-like) evaluation
+
+```bash
+python /kaggle/working/sih26168/src/evaluate_recursive_gru.py \
+    --model-path /kaggle/working/outputs/ml/best_model.pt \
+    --norm-path /kaggle/working/outputs/ml/normalization.npz \
+    --context-len 20 \
+    --seed 42
+```
+
+Expected output in `outputs/ml/recursive/`:
+- `recursive_v0_report.txt` — full experiment report (12-question checklist)
+- `recursive_comparison.csv` — per-window A0 vs teacher vs recursive metrics
+- `plots/...` — position error vs time (per duration), teacher-vs-recursive,
+  classical-vs-teacher-vs-recursive, recursive velocity error
+
+> **Recursive = deployment-like.** During the blackout the vehicle-CAN and
+> GNSS-derived feature channels are NOT read from the recording; they are
+> replaced by recursively-maintained internal state (see
+> `RECURSIVE_FEATURE_SUBSTITUTION` in the script). Same 39 windows as Step 2.
+
+### One-shot (train + teacher eval + recursive eval)
+
+```bash
+python /kaggle/working/sih26168/src/run_all.py \
+    --data-root /kaggle/input/sih26168
+```
+
+Runs Step 1 → 2 → 3 sequentially.
+
 ## Architecture
 
 ```

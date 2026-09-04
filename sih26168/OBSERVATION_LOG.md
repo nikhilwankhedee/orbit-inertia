@@ -722,9 +722,9 @@ At 10 s, calibration provides a small improvement in position (+3.4%) and large 
 
 ## 2026-09-04 — ML Residual Learning: GRU Pipeline Implementation
 
-### Status: PENDING KAGGLE RUN
+### Status: DONE — see "ML V0 Result" section below
 
-Local smoke test completed (3-epoch, NOT scientific). Full training to be executed on Kaggle.
+Local smoke test completed (3-epoch, NOT scientific). Full training executed on Kaggle; results captured below.
 
 ### Architecture
 
@@ -797,3 +797,200 @@ Local smoke test completed (3-epoch, NOT scientific). Full training to be execut
 2. Analyze trained model results
 3. If GRU shows improvement, consider: larger hidden size, 2-layer GRU, different window lengths
 4. If improvement insufficient, consider: attention mechanisms, multi-scale features, different target formulation
+
+## 2026-09-04 — ML V0 Result: Kaggle Full Training Achieved 34–45% Improvement
+
+### Status: COMPLETE — FIRST REAL ML RESULT SECURED
+
+The first actual ML experiment (causal residual-learning GRU) completed a full
+GPU training run on Kaggle and the entire evaluation finished cleanly
+(39 blackout windows, "PIPELINE COMPLETE"). This section supersedes the smoke-test
+entry above (that was a 3-epoch local run, NOT scientific).
+
+### The Result
+
+ML-corrected dead reckoning reduced mean position error by **34–45%** across
+every tested GNSS blackout duration, relative to the A0 classical baseline.
+
+| GNSS blackout | Classical A0 | A0 + GRU | Improvement |
+| ------------: | -----------: | -------: | ----------: |
+|          10 s |       49.8 m |  30.4 m  |   **38.9%** |
+|          30 s |       82.7 m |  45.7 m  |   **44.7%** |
+|          60 s |      244.4 m | 161.3 m  |   **34.0%** |
+|         120 s |      536.6 m | 298.2 m  |   **44.4%** |
+
+- A0 MAE here is the same windows/metric as the ML eval, so the comparison is
+  apples-to-apples (note: MAE over blackout ≠ the classical report's endpoint metric).
+- Best model checkpoint: epoch 40, val loss 0.5702; early stopping fired at
+  epoch 60 (patience 20).
+- Training: ~17 s on Kaggle GPU, train loss collapsed 0.906 → 0.038.
+
+### Why This Is a Meaningful Result
+
+- **Consistent improvement across all durations** — not a fluke window set.
+- **Tiny model: 4,866 parameters** — the gain is not from brute-force scale.
+- We have crossed the biggest psychological/scientific hurdle: we no longer
+  say "we think ML might help." We can now state:
+
+> "In our initial causal residual-learning experiment, a 4,866-parameter GRU
+> reduced mean position error by 34–45% across 10–120 second simulated GNSS
+> outages compared with classical dead reckoning."
+
+This is a legitimate V0 result. But it is **not** production-ready.
+
+### Caveat 1 — Tiny Test Set (Generalization Limp)
+
+- Test = Seg3 only: **501 rows / 97 windows**.
+- Too little held-out data for a strong generalization claim.
+- Next major experiment should be **more trajectories, not a bigger GRU**.
+
+### Caveat 2 — Frame Mapping Unresolved (Biggest Technical Issue)
+
+- The model predicts `ΔEast, ΔNorth`, but the phone-to-vehicle EN-frame
+  relationship has no established physical basis.
+- The velocity target is an **empirical construct**.
+- Do NOT build a production navigation architecture around this formulation
+  until the coordinate/frame pipeline is resolved.
+
+### Caveat 3 — Rollout Is Not Deployment-Like Yet
+
+- Current eval = full-context, teacher-style/batched inference.
+- Real system loop: IMU → navigation state → ML correction → corrected state
+  → next step → ML correction → ... Errors can compound.
+- Need the **recursive rollout experiment** before claiming real-time readiness.
+
+### Decision / Verdict
+
+**Do NOT build the final app yet.**
+
+Pipeline position:
+
+```text
+DATA → SYNC → SENSOR INVESTIGATION → CLASSICAL DR → GYRO ABLATION
+→ V0 GRU → 34–45% improvement  →  WE HAVE A PROMISING MODEL
+```
+
+Remaining path:
+
+```text
+V0 GRU
+  ↓
+Resolve frame formulation
+  ↓
+Multi-trajectory training/testing
+  ↓
+Recursive rollout
+  ↓
+Model validation
+  ↓
+FREEZE MODEL
+  ↓
+APP
+```
+
+### Recommended Next Experiment
+
+**Recursive rollout + broader trajectory validation** — NOT a larger model.
+
+### Files
+
+- `outputs/ml/KAGGLE_EVALUATION_REPORT.md` — full evaluation report
+- `outputs/kaggle_kernel/` — downloaded kernel outputs (model, plots, `sih-2026.log`)
+- `src/evaluate_velocity_residual_gru.py` — fixed `load_model(device)` + defensive `model.to(device)`
+
+## 2026-09-04 — V0 GRU Recursive Rollout Evaluation
+
+### Status: PENDING KAGGLE RUN
+
+Implementation complete and pushed. Local smoke test passed (2 windows, 10 s —
+labelled NOT scientific). Full 39-window recursive evaluation runs on Kaggle.
+
+### Objective
+
+Determine whether the 34–45% V0 teacher-style improvement survives a genuinely
+recursive, deployment-like rollout: the model's own corrected state fed back
+into the next timestep, instead of reference/teacher state.
+
+### Feature Availability Audit (V0 16-feature set)
+
+| # | Feature | Source | During GNSS-denied phone deployment? |
+|---|---------|--------|-------------------------------------|
+| 1–3 | accel_x/y/z | Phone IMU | measured |
+| 4–6 | gravity_x/y/z | Phone IMU | measured |
+| 7 | gyro_pitch | Phone IMU | measured |
+| 8 | phone_speed | Phone GPS | NO (GNSS-derived) |
+| 9 | phone_acc | Phone GPS accuracy | NO (GNSS-derived) |
+| 10 | veh_velocity | Vehicle CAN | NO |
+| 11 | veh_heading | Vehicle CAN | NO |
+| 12 | veh_yaw_rate | Vehicle CAN | NO |
+| 13 | steering | Vehicle CAN | NO |
+| 14–16 | whl_fl/fr/rl | Vehicle CAN | NO |
+
+**Key finding (leakage):** The original teacher-style evaluation read the
+RECORDED vehicle-CAN features during the blackout — i.e. near-truth velocity
+and heading were available in the model input. The 34–45% teacher improvement
+is therefore partly attributable to reference leakage, NOT purely to learned
+inertial dead reckoning. This recursive experiment directly addresses it.
+
+### Recursive State (maintained internally, windows never cross segments)
+
+- heading (rad): gyro-integrated, identical recurrence to A0
+- corrected EN velocity (m/s): classical + GRU residual
+- internal speed = |v_corrected| (km/h): recursively replaced veh_velocity/phone_speed channels
+- position (East/North)
+
+### Recursive Feature Substitution (available during blackout)
+
+- accel_x/y/z, gravity_x/y/z, gyro_pitch → measured
+- phone_speed, veh_velocity → internal speed estimate (km/h), recursive
+- veh_heading → gyro-integrated heading (rad), recursive
+- veh_yaw_rate → measured gyro_pitch (rad/s) proxy
+- phone_acc, steering, whl_fl/fr/rl → held at last pre-blackout value (causal)
+
+### Methodology (teacher vs recursive)
+
+- Same 39 blackout windows / durations (10/30/60/120 s), identical selection criteria.
+- A0 reproduced on the same windows.
+- Teacher = original full-context batched eval (reused unchanged, LEAKY).
+- Recursive = step-by-step, causal, recursive feature substitution, ground truth only for eval.
+- Metrics per duration: position MAE/RMSE/max/final, velocity MAE/RMSE, heading MAE; position error vs time since GNSS loss.
+
+### Checkpoint Compatibility — CRITICAL
+
+The V0 checkpoint (16 features, incl. CAN) is NOT compatible with a strict
+smartphone-only input (7 phone-measured dims). The recursive experiment keeps
+the 16-dim input space with causal substitution so the existing checkpoint can
+be evaluated honestly. If recursive results are promising, the MINIMUM
+retraining experiment is a phone-only feature set
+(`DEPLOYMENT_FEATURE_KEYS` in `ml_common.py`: 7 measured + `nav_speed`,
+`nav_heading` internal state) — queued as the next Kaggle training run.
+
+### Kaggle Execution
+
+- `run_all.py` now runs STEP 3 recursive evaluation automatically after train + teacher eval.
+- Single command: `python run_all.py --data-root /kaggle/input/...`
+
+### Result
+
+NOT AVAILABLE — pending Kaggle run.
+
+### Interpretation
+
+Pending. Deliverable structure supports CASE A (strong recursive) / CASE B
+(teacher strong, recursive weak) / CASE C (recursive worse than A0) verdicts
+in `recursive_v0_report.txt`.
+
+### Limitations
+
+- Only 39 windows from a single trajectory (Seg3 test already tiny).
+- Frame mapping (phone↔vehicle EN) unresolved — 2-D EN residual remains empirical.
+- Recursive substitution of CAN channels is an approximation (held values),
+  not true sensor removal; a phone-only retrain is required for deployment validity.
+- Local smoke results are NOT scientific (2 windows, single duration).
+
+### Next Action
+
+1. Re-run Kaggle notebook (fresh clone) → STEP 3 produces recursive results.
+2. Download outputs → update this entry with results + CASE verdict.
+3. If CASE A → phone-only retrain + multi-trajectory validation.
+4. If CASE B/C → diagnose feature/state/target/frame before further training.

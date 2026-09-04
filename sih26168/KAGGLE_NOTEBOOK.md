@@ -48,9 +48,15 @@ ml_improvement.png       % improvement chart
 ml_position_error_{10,30,60,120}s.png
 ml_trajectory_{10,30,60,120}s.png
 ml_velocity_residuals_30s.png
+recursive/               recursive (deployment-like) rollout results:
+  recursive_v0_report.txt  full 12-question experiment report
+  recursive_comparison.csv per-window A0/teacher/recursive metrics
+  plots/*.png              position error vs time + comparisons
 ```
 
-The final cell prints the A0-vs-ML error table.
+`run_all.py` runs three steps: **1) train → 2) teacher-style evaluation →
+3) recursive (deployment-like) evaluation**. The final cell prints the
+A0-vs-ML error table; the recursive report/plots land in `outputs/ml/recursive/`.
 
 ## Options
 

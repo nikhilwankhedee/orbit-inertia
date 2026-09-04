@@ -103,10 +103,28 @@ def main():
         print("\n*** Evaluation failed.")
         sys.exit(1)
 
+    # ── Step 3: Recursive (deployment-like) evaluation ──
+    print("\n" + "=" * 70)
+    print("STEP 3: RECURSIVE (DEPLOYMENT-LIKE) EVALUATION")
+    print("=" * 70)
+    rec_cmd = [
+        sys.executable, str(src_dir / "evaluate_recursive_gru.py"),
+        "--data-root", data_dir,
+        "--model-path", str(repo_dir / "outputs" / "ml" / "best_model.pt"),
+        "--norm-path", str(repo_dir / "outputs" / "ml" / "normalization.npz"),
+        "--context-len", str(args.context_len),
+        "--seed", str(args.seed),
+    ]
+    print(f"  Running: {' '.join(rec_cmd)}")
+    r = subprocess.run(rec_cmd, cwd=src_dir.parents[1])
+    if r.returncode != 0:
+        print("\n*** Recursive evaluation failed.")
+        sys.exit(1)
+
     print("\n" + "=" * 70)
     print("PIPELINE COMPLETE")
     print("=" * 70)
-    print("  Outputs in outputs/ml/")
+    print("  Outputs in outputs/ml/ and outputs/ml/recursive/")
 
 
 if __name__ == "__main__":
