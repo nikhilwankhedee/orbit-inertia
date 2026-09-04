@@ -666,6 +666,7 @@ def main():
 
         # ML-GRU
         print("    ML-GRU...")
+        model.to(device)  # ensure params on active device (defensive)
         res_ml = run_ml_dr(model, data, features, norm, w, args.context_len, device)
         met_ml = compute_metrics(
             res_ml["positions_east"], res_ml["positions_north"], res_ml["headings"],
