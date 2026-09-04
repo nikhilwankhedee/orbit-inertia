@@ -42,19 +42,29 @@ def main():
     print(f"  Data root: {args.data_root}")
     print(f"  Source:    {src_dir}")
 
-    # Locate the CSV under the data root
-    candidates = [
-        Path(args.data_root) / "S4_synced.csv",
-        Path(args.data_root) / "processed" / "S4_synced.csv",
-    ]
-    csv_path = next((c for c in candidates if c.exists()), None)
+    # Locate the CSV. Accept either the dataset dir OR the CSV file itself
+    # as --data-root (handles pasting the Kaggle mount path to the .csv).
+    raw = Path(args.data_root)
+    if raw.is_file() and raw.name.lower() == "s4_synced.csv":
+        csv_path = raw
+    else:
+        candidates = [
+            raw / "S4_synced.csv",
+            raw / "processed" / "S4_synced.csv",
+        ]
+        csv_path = next((c for c in candidates if c.exists()), None)
     if csv_path is None:
         print("\n*** Could not find S4_synced.csv under --data-root")
         print("    Tried:")
         for c in candidates:
             print(f"      {c}")
+        print("\n    Tip: pass the DATASET DIRECTORY (the mount), not the CSV file path.")
+        print("    e.g. --data-root /kaggle/input/datasets/nikhilwankhedee/v0dataset")
         sys.exit(1)
     print(f"  Dataset:   {csv_path}")
+
+    # Resolve the dataset directory to pass to child scripts
+    data_dir = str(csv_path.parent)
 
     # ── Step 1: Train ──
     print("\n" + "=" * 70)
@@ -62,7 +72,7 @@ def main():
     print("=" * 70)
     train_cmd = [
         sys.executable, str(src_dir / "train_velocity_residual_gru.py"),
-        "--data-root", args.data_root,
+        "--data-root", data_dir,
         "--context-len", str(args.context_len),
         "--stride", str(args.stride),
         "--hidden-size", str(args.hidden_size),
@@ -82,7 +92,7 @@ def main():
     print("=" * 70)
     eval_cmd = [
         sys.executable, str(src_dir / "evaluate_velocity_residual_gru.py"),
-        "--data-root", args.data_root,
+        "--data-root", data_dir,
         "--model-path", str(repo_dir / "outputs" / "ml" / "best_model.pt"),
         "--norm-path", str(repo_dir / "outputs" / "ml" / "normalization.npz"),
         "--context-len", str(args.context_len),
