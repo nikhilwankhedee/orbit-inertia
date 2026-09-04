@@ -49,11 +49,11 @@ OUT_DIR = mc.OUT_DIR
 # ──────────────────────────────────────────────────────────────
 # MODEL LOADING
 # ──────────────────────────────────────────────────────────────
-def load_model(model_path: Path):
+def load_model(model_path: Path, device: torch.device):
     """Load trained GRU model from checkpoint."""
     from train_velocity_residual_gru import VelocityResidualGRU
 
-    ckpt = torch.load(model_path, map_location="cpu", weights_only=False)
+    ckpt = torch.load(model_path, map_location=device, weights_only=False)
     config = ckpt["config"]
 
     model = VelocityResidualGRU(
@@ -62,6 +62,7 @@ def load_model(model_path: Path):
         n_layers=config["n_layers"],
     )
     model.load_state_dict(ckpt["model_state_dict"])
+    model.to(device)
     model.eval()
 
     print(f"  Model loaded: {model_path}")
@@ -609,7 +610,7 @@ def main():
 
     # ── Load model ──
     print("\nLoading model...")
-    model, model_config = load_model(Path(args.model_path))
+    model, model_config = load_model(Path(args.model_path), device)
 
     # ── Load normalization ──
     print("\nLoading normalization...")
