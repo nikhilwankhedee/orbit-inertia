@@ -1,0 +1,318 @@
+================================================================================
+CLASSICAL DEAD-RECKONING V0 BASELINE REPORT
+================================================================================
+
+
+================================================================================
+CLASSICAL DR V0 ASSUMPTIONS
+================================================================================
+
+MEASURED:
+  - Phone accelerometer X/Y/Z (m/s²) at 10 Hz
+  - Phone gravity X/Y/Z (m/s²) at 10 Hz
+  - Phone gyroscope Yaw/Pitch/Roll (rad/s) at 10 Hz
+  - Phone GPS latitude/longitude (degrees) at ~1 Hz
+  - Phone GPS speed (Kmh) at ~1 Hz
+  - Vehicle CAN: velocity, heading, yaw rate, wheel speeds, steering angle
+
+INFERRED:
+  - Phone Z axis is approximately vertical (gravity Z ≈ 9.81 m/s²)
+  - Gyro Pitch has an empirical relationship with vehicle yaw rate
+    (correlation ~0.71 during strong turns, scale factor ~0.94 median)
+  - GPS speed × 3.6 ≈ vehicle velocity (validated against CAN data)
+
+ASSUMED (V0):
+  A. Phone Z axis is vertical; phone X/Y axes are in the horizontal plane
+     BUT the phone-to-vehicle yaw rotation is UNKNOWN.
+  B. Gyro Pitch is used as the heading rate signal. No proven physical
+     basis beyond empirical correlation with vehicle yaw rate.
+  C. The phone-to-vehicle X/Y frame mapping is NOT established.
+     For Baseline B (IMU acceleration), we ASSUME phone X ≈ vehicle forward
+     and phone Y ≈ vehicle left. This is an UNVERIFIED assumption.
+  D. The 1.81 s alignment offset is an empirical inter-stream parameter,
+     NOT a proven physical sensor latency. It is used ONLY for
+     reference comparison evaluation, never during DR propagation.
+  E. Phone GPS provides absolute position at ~1 Hz with ~3 m accuracy.
+  F. GPS speed × 3.6 provides a reasonable velocity estimate.
+
+WHAT IS NOT ASSUMED:
+  - No EKF, UKF, or filtering
+  - No ML correction
+  - No map matching
+  - No future information during blackout (strictly causal)
+  - No faking of successful DR results
+
+SEPARATION OF CONCERNS:
+  - DR propagation: causal, uses only IMU + last-known state
+  - Evaluation: uses ground-truth GPS/vehicle reference AFTER blackout
+================================================================================
+
+================================================================================
+A. INPUT DATASET
+================================================================================
+  File: /home/nikhil/projects/sih/IO-VNBD/processed/S4_synced.csv
+  Rows: 91,463
+  Duration: ~9460 s (~2.6 hours)
+  Segments: 4 (separated by recording gaps)
+    Seg 0: 35186 rows, 3518.5 s
+    Seg 1: 13001 rows, 1300.1 s
+    Seg 2: 42775 rows, 4277.7 s
+    Seg 3: 501 rows, 50.0 s
+
+================================================================================
+B. COLUMNS USED
+================================================================================
+  accel_x                   = ACCELEROMETER X (m/s²)
+  accel_y                   = ACCELEROMETER Y (m/s²)
+  accel_z                   = ACCELEROMETER Z (m/s²)
+  gravity_x                 = GRAVITY X (m/s²)
+  gravity_y                 = GRAVITY Y (m/s²)
+  gravity_z                 = GRAVITY Z (m/s²)
+  gyro_pitch                = GYROSCOPE Pitch (rad/s)
+  sync_time                 = SYNC_TIME_S
+  phone_date                = DATE (YYYY-MO-DD HH-MI-SS_SSS)
+  phone_lat                 = GPS LATITUDE (degrees)
+  phone_lon                 = GPS LONGITUDE (degrees)
+  phone_gps_speed           = GPS SPEED (Kmh)
+  phone_gps_accuracy        = GPS ACCURACY (m)
+  veh_lat                   = Latitude (degrees)
+  veh_lon                   = Longitude (degrees)
+  veh_velocity              = Velocity (km/hr)
+  veh_heading               = Heading (degrees)
+  veh_yaw_rate              = Yaw Rate (deg/sec)
+
+================================================================================
+C. COORDINATE-FRAME ASSUMPTIONS
+================================================================================
+  Local tangent-plane ENU:
+    East  = dlon × cos(lat0) × (π/180) × R_EARTH
+    North = dlat × (π/180) × R_EARTH
+    R_EARTH = 6,371,000 m
+  Validity: trajectory scale ~11 km, tangent-plane error < 0.01%
+  Origin: vehicle reference position at first blackout start
+
+================================================================================
+D. PHONE→VEHICLE FRAME ASSUMPTIONS
+================================================================================
+  Baseline A: No frame assumption needed (heading-only propagation)
+  Baseline B: UNVERIFIED — assumes phone X ≈ vehicle forward,
+              phone Y ≈ vehicle left. Gravity vector confirms
+              phone Z is vertical but says nothing about yaw.
+  Sign agreement gyro_pitch vs vehicle_yaw_rate: ~80%
+  → Baseline B results MUST be interpreted with extreme caution.
+
+================================================================================
+E. GYRO SCALE FACTOR
+================================================================================
+  Overall correlation (gyro pitch vs veh yaw rate): 0.5073
+  Scale factor NOT applied in V0 (used 1.0)
+  → This is a known limitation.
+
+================================================================================
+F. TIMESTAMP / ALIGNMENT TREATMENT
+================================================================================
+  SYNC_TIME_S used for all timing
+  Empirical inter-stream offset: +1.81 s
+  Applied ONLY for reference comparison, NEVER during DR propagation
+  DR propagation is strictly causal
+
+================================================================================
+G. INITIALIZATION METHOD
+================================================================================
+  Position: vehicle reference lat/lon at blackout start → ENU
+  Heading:  vehicle reference heading at blackout start
+  Velocity: Baseline A uses vehicle reference speed (constant)
+            Baseline B initializes velocity from vehicle reference,
+            then propagates via IMU acceleration integration
+
+================================================================================
+H. BLACKOUT SELECTION METHODOLOGY
+================================================================================
+  Durations: [10, 30, 60, 120]
+  Constraints:
+    - Within a single segment (no gap crossing)
+    - Vehicle motion > 2.0 km/h before blackout
+    - GPS accuracy < 5.0 m before blackout
+    - Evaluation margin after blackout: min(30, duration) s
+  Selected windows: 39
+     10s | rows [10, 110) | T=1.0-10.9 | pre_vel=9.8 km/h
+     10s | rows [18410, 18510) | T=1841.0-1850.9 | pre_vel=24.9 km/h
+     10s | rows [34986, 35086) | T=3498.6-3508.5 | pre_vel=4.5 km/h
+     10s | rows [40239, 40339) | T=4335.9-4345.8 | pre_vel=2.1 km/h
+     10s | rows [44146, 44246) | T=4726.7-4736.6 | pre_vel=19.7 km/h
+     10s | rows [47986, 48086) | T=5110.7-5120.6 | pre_vel=3.9 km/h
+     10s | rows [48197, 48297) | T=5131.9-5141.8 | pre_vel=13.9 km/h
+     10s | rows [69939, 70039) | T=7306.4-7316.3 | pre_vel=23.0 km/h
+     10s | rows [90761, 90861) | T=9388.6-9398.5 | pre_vel=36.6 km/h
+     10s | rows [91006, 91106) | T=9414.3-9424.2 | pre_vel=28.0 km/h
+     10s | rows [91109, 91209) | T=9424.6-9434.5 | pre_vel=33.4 km/h
+     10s | rows [91212, 91312) | T=9434.9-9444.8 | pre_vel=36.6 km/h
+     30s | rows [10, 310) | T=1.0-30.9 | pre_vel=9.8 km/h
+     30s | rows [18318, 18618) | T=1831.8-1861.7 | pre_vel=2.1 km/h
+     30s | rows [34559, 34860) | T=3455.9-3485.9 | pre_vel=2.1 km/h
+     30s | rows [40239, 40539) | T=4335.9-4365.8 | pre_vel=2.1 km/h
+     30s | rows [43947, 44247) | T=4706.8-4736.7 | pre_vel=3.8 km/h
+     30s | rows [47587, 47887) | T=5070.8-5100.7 | pre_vel=33.5 km/h
+     30s | rows [48197, 48497) | T=5131.9-5161.8 | pre_vel=13.9 km/h
+     30s | rows [69381, 69681) | T=7250.6-7280.5 | pre_vel=82.0 km/h
+     30s | rows [90361, 90661) | T=9348.6-9378.5 | pre_vel=16.6 km/h
+     60s | rows [10, 610) | T=1.0-60.9 | pre_vel=9.8 km/h
+     60s | rows [18100, 18701) | T=1810.0-1870.0 | pre_vel=41.8 km/h
+     60s | rows [34286, 34886) | T=3428.6-3488.5 | pre_vel=34.5 km/h
+     60s | rows [40239, 40839) | T=4335.9-4395.8 | pre_vel=2.1 km/h
+     60s | rows [43797, 44396) | T=4691.7-4751.6 | pre_vel=31.4 km/h
+     60s | rows [47287, 47887) | T=5040.8-5100.7 | pre_vel=17.0 km/h
+     60s | rows [48197, 48797) | T=5131.9-5191.8 | pre_vel=13.9 km/h
+     60s | rows [69231, 69831) | T=7235.6-7295.5 | pre_vel=87.2 km/h
+     60s | rows [90061, 90661) | T=9318.6-9378.5 | pre_vel=3.3 km/h
+    120s | rows [10, 1210) | T=1.0-120.9 | pre_vel=9.8 km/h
+    120s | rows [17663, 18863) | T=1766.3-1886.2 | pre_vel=32.3 km/h
+    120s | rows [33686, 34886) | T=3368.6-3488.5 | pre_vel=27.2 km/h
+    120s | rows [40239, 41440) | T=4335.9-4455.9 | pre_vel=2.1 km/h
+    120s | rows [43497, 44697) | T=4661.7-4781.7 | pre_vel=26.1 km/h
+    120s | rows [46687, 47887) | T=4980.8-5100.7 | pre_vel=29.9 km/h
+    120s | rows [48197, 49396) | T=5131.9-5251.8 | pre_vel=13.9 km/h
+    120s | rows [68931, 70132) | T=7205.6-7325.6 | pre_vel=88.7 km/h
+    120s | rows [89461, 90661) | T=9258.6-9378.5 | pre_vel=30.7 km/h
+
+================================================================================
+I. CAUSALITY RULES
+================================================================================
+  During blackout, DR state uses ONLY:
+    - IMU samples up to current time
+    - Last-known velocity (Baseline A) or velocity from accel integration (B)
+    - Current heading (from gyro integration)
+  Ground truth (vehicle GPS, heading, yaw rate) used ONLY for evaluation
+
+================================================================================
+J. INTEGRATION EQUATIONS
+================================================================================
+  Baseline A:
+    heading_{k+1} = heading_k + gyro_pitch_k × dt
+    pos_east_{k+1} = pos_east_k + v × cos(heading_k) × dt
+    pos_north_{k+1} = pos_north_k + v × sin(heading_k) × dt
+
+  Baseline B (EXPERIMENTAL):
+    heading_{k+1} = heading_k + gyro_pitch_k × dt
+    a_body = accel - gravity
+    a_nav = R(heading) × a_body
+    v_{k+1} = v_k + a_nav × dt
+    p_{k+1} = p_k + v_k × dt + 0.5 × a_nav × dt²
+
+================================================================================
+K. METRICS — BASELINE A (Yaw-Only Kinematic)
+================================================================================
+    Duration     MAE (m)    RMSE (m)     Max (m)   Final (m)    Head MAE
+  ----------  ----------  ----------  ----------  ----------  ----------
+       10 s        41.3        48.0        83.0        83.0       77.7°
+       30 s       137.6       161.6       288.5       288.5       93.0°
+       60 s       254.6       294.1       500.9       486.1       87.2°
+      120 s       440.1       504.5       872.4       850.2       90.1°
+
+================================================================================
+K. METRICS — BASELINE B (IMU Acceleration — EXPERIMENTAL)
+================================================================================
+    Duration     MAE (m)    RMSE (m)     Max (m)   Final (m)    Head MAE
+  ----------  ----------  ----------  ----------  ----------  ----------
+       10 s        45.0        53.2        95.6        95.6       77.7°
+       30 s       161.4       189.5       341.0       325.7       93.0°
+       60 s       343.3       411.1       758.9       758.9       87.2°
+      120 s       756.2       898.5      1719.1      1719.1       90.1°
+
+================================================================================
+L. NUMERICAL RESULTS
+================================================================================
+
+  Baseline A:
+     10s blackout:
+      Position MAE:      41.3 m
+      Position RMSE:     48.0 m
+      Position Max:      83.0 m
+      Position Final:    83.0 m
+      Heading MAE:       77.7°
+     30s blackout:
+      Position MAE:     137.6 m
+      Position RMSE:    161.6 m
+      Position Max:     288.5 m
+      Position Final:   288.5 m
+      Heading MAE:       93.0°
+     60s blackout:
+      Position MAE:     254.6 m
+      Position RMSE:    294.1 m
+      Position Max:     500.9 m
+      Position Final:   486.1 m
+      Heading MAE:       87.2°
+    120s blackout:
+      Position MAE:     440.1 m
+      Position RMSE:    504.5 m
+      Position Max:     872.4 m
+      Position Final:   850.2 m
+      Heading MAE:       90.1°
+
+  Baseline B:
+     10s blackout:
+      Position MAE:      45.0 m
+      Position RMSE:     53.2 m
+      Position Max:      95.6 m
+      Position Final:    95.6 m
+      Heading MAE:       77.7°
+     30s blackout:
+      Position MAE:     161.4 m
+      Position RMSE:    189.5 m
+      Position Max:     341.0 m
+      Position Final:   325.7 m
+      Heading MAE:       93.0°
+     60s blackout:
+      Position MAE:     343.3 m
+      Position RMSE:    411.1 m
+      Position Max:     758.9 m
+      Position Final:   758.9 m
+      Heading MAE:       87.2°
+    120s blackout:
+      Position MAE:     756.2 m
+      Position RMSE:    898.5 m
+      Position Max:    1719.1 m
+      Position Final:  1719.1 m
+      Heading MAE:       90.1°
+
+================================================================================
+M. LIMITATIONS
+================================================================================
+  1. Gyro pitch correlation with vehicle yaw rate is moderate (~0.71)
+     Sign agreement ~80%. This limits heading propagation accuracy.
+  2. No gyro scale factor applied (V0 uses 1.0)
+  3. Phone-to-vehicle frame mapping is UNVERIFIED (Baseline B)
+  4. Baseline A holds velocity constant — no acceleration model
+  5. GPS updates at ~1 Hz with ~3 m accuracy — init position has error
+  6. Vehicle reference used for initialization (not phone GPS)
+  7. Small sample: only ~3 blackout windows per duration
+  8. No sensor noise modeling or filtering
+
+================================================================================
+N. IS THE BASELINE PHYSICALLY DEFENSIBLE?
+================================================================================
+  Baseline A: YES — it is a simple, honest kinematic DR model.
+    Heading from gyro integration, constant velocity, known initial state.
+    Every assumption is documented and the failure modes are expected.
+
+  Baseline B: NO — the phone→vehicle frame transform is unverified.
+    The 80% sign agreement and unknown yaw rotation between phone
+    and vehicle mean that Baseline B acceleration integration may
+    inject large systematic errors. Results should be treated as
+    experimental and not as evidence of IMU capability.
+
+================================================================================
+O. RECOMMENDATIONS FOR NEXT STEPS
+================================================================================
+  1. Run Baseline A and quantify the real drift — do not optimize
+  2. If Baseline A drift is severe, the ML correction has clear targets
+  3. Investigate gyro pitch sign disagreements — phone reorientation?
+  4. Consider using steering angle + wheel speed for velocity model
+  5. If Baseline B shows large errors, this confirms frame uncertainty
+     is the critical limitation to address
+  6. Future: EKF with gyro + vehicle speed fusion
+  7. Future: ML correction model (the ultimate goal)
+
+================================================================================
+END OF REPORT
+================================================================================

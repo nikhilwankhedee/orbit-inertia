@@ -1,0 +1,94 @@
+TIMESTAMP EPOCH INVESTIGATION REPORT
+================================================================================
+
+Goal: Determine whether the ~1.81 s inter-stream offset
+can be explained by raw timestamp epoch differences.
+
+Files examined:
+  Phone:    /home/nikhil/projects/sih/IO-VNBD/Synchronised V abd S datasets/Categorised IOVNB Dataset/S (Driver A)/S4/S-S4.csv
+  Vehicle:  /home/nikhil/projects/sih/IO-VNBD/Synchronised V abd S datasets/Categorised IOVNB Dataset/S (Driver A)/S4/V-S4.csv
+  Synced:   /home/nikhil/projects/sih/IO-VNBD/processed/S4_synced.csv
+
+--------------------------------------------------------------------------------
+RAW TIMESTAMP FINDINGS
+--------------------------------------------------------------------------------
+
+Phone DATE column: DATE (YYYY-MO-DD HH-MI-SS_SSS)
+  Format: YYYY-MM-DD HH:MM:SS:mmm (absolute wall-clock)
+  First:  2019-09-06 18:16:15:111
+  Last:   2019-09-06 20:59:08:216
+  Rows:   94,600
+  As seconds since midnight:
+    Start: 65775.111 s = 18:16:15.111
+    End:   75548.216 s = 20:59:08.216
+    Duration: 9773.105 s
+
+Vehicle time column: Time Since Start of Day (seconds)
+  Format: float seconds since start of day
+  First:  62173.4 s
+  Last:   71633.3 s
+  Rows:   94,600
+  Duration: 9459.900 s
+
+--------------------------------------------------------------------------------
+EPOCH OFFSET
+--------------------------------------------------------------------------------
+
+  Phone start (s since midnight): 65775.111
+  Vehicle start (s since midnight): 62173.4
+  Offset at start: 3601.711 s
+  Offset at end:   3914.916 s
+  Drift:           313.205 s
+
+  The ~3600 s offset is approximately 1.0 hours.
+  This is consistent with a timezone difference
+  (BST vs UTC, or similar).
+
+  The ~313 s drift corresponds to the
+  ~312 s phone recording gap.
+
+--------------------------------------------------------------------------------
+CAN THE 1.81 s OFFSET BE EXPLAINED?
+--------------------------------------------------------------------------------
+
+  The raw timestamp data shows:
+    1. A large epoch offset (~3600 s = ~1.0 hours)
+    2. A drift (~313 s) matching the phone gap
+
+  The synchronization process removed the large epoch offset
+  and accounted for the gap. The remaining ~1.81 s offset
+  is NOT visible in the raw timestamp data.
+
+  The raw timestamps do not provide sufficient resolution
+  to identify a ~1.81 s offset. The vehicle timestamp has
+  0.1 s resolution, and the phone DATE has ~1 ms resolution.
+  However, the synchronization process uses these timestamps
+  to align the streams, and the residual offset persists.
+
+  CONCLUSION:
+  The dataset does not provide sufficient evidence to attribute
+  the measured 1.81 s inter-stream offset to a specific
+  timestamp epoch difference.
+
+  The 1.81 s offset must be treated as an empirically
+  calibrated inter-stream alignment parameter.
+
+--------------------------------------------------------------------------------
+RECOMMENDATION FOR DR EVALUATION
+--------------------------------------------------------------------------------
+
+  Treat the 1.81 s offset as an empirical alignment parameter:
+
+  1. Do NOT claim it represents 'phone IMU latency'
+  2. Do NOT claim it represents 'vehicle CAN bus delay'
+  3. DO state: 'Phone Gyro Pitch and vehicle yaw rate are
+     aligned with an empirical offset of +1.81 ± 0.06 s'
+  4. For DR evaluation, shift the vehicle yaw rate signal
+     backward by 1.81 s (or equivalently, shift the phone
+     gyro pitch signal forward by 1.81 s)
+  5. Report this as a calibrated parameter, not a physical
+     measurement of sensor latency
+
+================================================================================
+END OF REPORT
+================================================================================

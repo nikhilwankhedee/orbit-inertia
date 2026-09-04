@@ -1,0 +1,12 @@
+{
+  "n_features": 16,
+  "hidden_size": 32,
+  "n_layers": 1,
+  "context_len": 20,
+  "stride": 5,
+  "epochs_trained": 3,
+  "best_val_loss": 1.535536027699796,
+  "train_samples": 9631,
+  "val_samples": 8551,
+  "seed": 42
+}

@@ -1,0 +1,30 @@
+================================================================================
+ML RESIDUAL GRU — EVALUATION REPORT
+================================================================================
+Date: 2026-09-04 20:58
+Model: GRU (1-layer, hidden=32)
+Features: 16 dimensions
+Context window: ? samples
+Training epochs: ?
+
+
+--------------------------------------------------------------------------------
+COMPARISON: A0 (classical) vs ML-GRU (corrected)
+--------------------------------------------------------------------------------
+  Duration |     A0 MAE |     ML MAE |  Improvement |    A0 RMSE |    ML RMSE
+--------------------------------------------------------------------------------
+       10s |      49.8m |      40.7m |      +18.2%   |      57.4m |      46.4m
+       30s |      82.7m |      61.7m |      +25.5%   |      97.7m |      70.5m
+       60s |     244.4m |     176.6m |      +27.8%   |     277.2m |     199.9m
+      120s |     536.6m |     367.5m |      +31.5%   |     610.5m |     412.6m
+--------------------------------------------------------------------------------
+
+NOTES:
+  - MAE = Mean Absolute Error over blackout period
+  - RMSE = Root Mean Square Error over blackout period
+  - Improvement = (A0_MAE - ML_MAE) / A0_MAE * 100%
+  - Positive improvement = ML is better than A0
+  - Model was trained on Seg0+Seg1, validated on Seg2
+  - Evaluation windows match classical_dr_baseline.py criteria
+
+================================================================================

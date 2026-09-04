@@ -1,0 +1,482 @@
+Loading synchronized dataset...
+Rows: 91,463
+Columns: 56
+
+================================================================================
+SELECTED COLUMNS (matched by prefix)
+================================================================================
+  Accel X:        ACCELEROMETER X (m/s²)
+  Accel Y:        ACCELEROMETER Y (m/s²)
+  Accel Z:        ACCELEROMETER Z (m/s²)
+  Gravity X:      GRAVITY X (m/s²)
+  Gravity Y:      GRAVITY Y (m/s²)
+  Gravity Z:      GRAVITY Z (m/s²)
+  Gyro Yaw:       GYROSCOPE Yaw (rad/s)
+  Gyro Pitch:     GYROSCOPE Pitch (rad/s)
+  Gyro Roll:      GYROSCOPE Roll (rad/s)
+  Orient Yaw:     ORIENTATION (Yaw) (Â°)
+  Orient Pitch:   ORIENTATION (Pitch) (Â°)
+  Orient Roll:    ORIENTATION (Roll ) (Â°)
+  Veh Velocity:   Velocity (km/hr)
+  Veh Heading:    Heading (degrees)
+  Veh Long Accel: Indicated Longitudinal Acceleration (g)
+  Veh Lat Accel:  Indicated Lateral Acceleration (g)
+  Veh Yaw Rate:   Yaw Rate (deg/sec)
+  Time:           SYNC_TIME_S
+
+Valid rows (all columns present): 91,463
+Dropped 0 rows with NaN in key columns
+
+================================================================================
+1. DATASET SHAPE AND TIMING
+================================================================================
+  Rows:          91,463
+  Time range:    0.000 s  to  9459.905 s
+  Duration:      9459.905 s  (157.7 min)
+
+  Median dt:     100.00 ms
+  Mean dt:       100.01 ms
+  Std dt:        1.14 ms
+  P95 dt:        101.00 ms
+  Max dt:        210.00 ms
+  Estimated freq:10.0 Hz
+
+  Gaps > 0.5 s:  2
+    t=3518.50 s  gap=312.142 s
+    t=9408.64 s  gap=1.264 s
+
+================================================================================
+2. ACCELEROMETER STATISTICS (m/s²)
+================================================================================
+  Axis X (ACCELEROMETER X (m/s²)):
+    Mean:     -0.0116
+    Std:       1.0449
+    Min:     -49.1996
+    P01:      -2.8917
+    P50:       0.0012
+    P99:       2.7097
+    Max:       8.7352
+  Axis Y (ACCELEROMETER Y (m/s²)):
+    Mean:      0.0013
+    Std:       1.0538
+    Min:      -9.2256
+    P01:      -2.8423
+    P50:       0.0054
+    P99:       2.7827
+    Max:      52.3986
+  Axis Z (ACCELEROMETER Z (m/s²)):
+    Mean:      9.8480
+    Std:       0.5130
+    Min:      -6.1671
+    P01:       8.4580
+    P50:       9.8479
+    P99:      11.2645
+    Max:      17.0603
+
+  Magnitude |a|:
+    Mean:      9.9564 m/s²
+    Std:       0.5648 m/s²
+    Min:       2.7791 m/s²
+    P01:       8.6483
+    P50:       9.9157
+    P99:      11.5366
+    Max:      72.1405
+
+================================================================================
+3. GRAVITY VECTOR STATISTICS (m/s²)
+================================================================================
+  Axis X:
+    Mean:      0.0000
+    Std:       0.0252
+    Min:      -1.2751
+    Max:       2.3908
+  Axis Y:
+    Mean:     -0.0001
+    Std:       0.0326
+    Min:      -1.7526
+    Max:       4.8688
+  Axis Z:
+    Mean:      9.8065
+    Std:       0.0049
+    Min:       8.4379
+    Max:       9.8067
+
+  Magnitude |g|:
+    Mean:    9.806595 m/s²
+    Std:     0.000037 m/s²
+    Min:     9.806239 m/s²
+    Max:     9.806824 m/s²
+    (Expected: ~9.81 m/s²)
+
+================================================================================
+4. LINEAR ACCELERATION — CANDIDATE QUANTITY
+================================================================================
+  Formula: linear_accel = accelerometer - gravity
+  WARNING: This is a DIAGNOSTIC estimate only.
+  We do NOT yet know if the phone reports true
+  linear accel, or if gravity subtraction is valid
+  for this device/sensor fusion pipeline.
+
+  Axis X:
+    Mean:     -0.0116
+    Std:       1.0438
+    Min:     -49.3704
+    P01:      -2.8948
+    P50:       0.0008
+    P99:       2.7061
+    Max:       9.0096
+  Axis Y:
+    Mean:      0.0014
+    Std:       1.0531
+    Min:      -9.2116
+    P01:      -2.8386
+    P50:       0.0055
+    P99:       2.7798
+    Max:      53.0283
+  Axis Z:
+    Mean:      0.0415
+    Std:       0.5129
+    Min:     -15.9520
+    P01:      -1.3482
+    P50:       0.0413
+    P99:       1.4580
+    Max:       7.2538
+
+  Candidate |a_linear| magnitude:
+    Mean:      1.2584 m/s²
+    Std:       0.9381 m/s²
+    Min:       0.0070 m/s²
+    P50:       1.0664
+    Max:      74.1883
+
+================================================================================
+5. GYROSCOPE STATISTICS
+================================================================================
+  Yaw (GYROSCOPE Yaw (rad/s)):
+    Mean:     0.00064 rad/s  (     0.037 deg/s)
+    Std:      0.12139 rad/s  (     6.955 deg/s)
+    Min:     -5.31690 rad/s  (  -304.636 deg/s)
+    P01:     -0.30274
+    P50:      0.00090
+    P99:      0.29690
+    Max:      9.52160 rad/s  (   545.547 deg/s)
+  Pitch (GYROSCOPE Pitch (rad/s)):
+    Mean:    -0.00685 rad/s  (    -0.393 deg/s)
+    Std:      0.13410 rad/s  (     7.683 deg/s)
+    Min:     -2.17950 rad/s  (  -124.876 deg/s)
+    P01:     -0.51264
+    P50:     -0.00260
+    P99:      0.37264
+    Max:      9.13220 rad/s  (   523.237 deg/s)
+  Roll (GYROSCOPE Roll (rad/s)):
+    Mean:     0.00151 rad/s  (     0.086 deg/s)
+    Std:      0.06603 rad/s  (     3.783 deg/s)
+    Min:     -7.19240 rad/s  (  -412.094 deg/s)
+    P01:     -0.13754
+    P50:      0.00110
+    P99:      0.14144
+    Max:      4.64610 rad/s  (   266.202 deg/s)
+
+  |gyro| magnitude:
+    Mean:  0.12596 rad/s
+    Max:   13.85235 rad/s
+
+================================================================================
+6. PHONE ORIENTATION (degrees)
+================================================================================
+  WARNING: Orientation convention is NOT yet known.
+  Yaw/Pitch/Roll labels may not map to vehicle axes.
+
+  Yaw:
+    Mean:     178.477
+    Std:      120.703
+    Min:        0.010
+    P01:        2.690
+    P50:      190.050
+    P99:      357.244
+    Max:      360.000
+  Pitch:
+    Mean:     -83.245
+    Std:        3.069
+    Min:      -89.940
+    P01:      -88.434
+    P50:      -83.380
+    P99:      -77.050
+    Max:       71.520
+  Roll:
+    Mean:     -58.826
+    Std:      150.138
+    Min:     -180.000
+    P01:     -179.460
+    P50:     -150.630
+    P99:      179.380
+    Max:      180.000
+
+================================================================================
+7. VEHICLE REFERENCE SIGNALS
+================================================================================
+  Velocity (km/h):
+    Mean:     34.7981
+    Std:      24.7564
+    Min:       0.0000
+    P01:       0.0180
+    P50:      34.3400
+    P99:      98.1231
+    Max:     109.6310
+  Heading (deg):
+    Mean:    192.5090
+    Std:     103.1213
+    Min:       0.0030
+    P01:       4.3898
+    P50:     198.9890
+    P99:     357.7839
+    Max:     359.9960
+  Long Accel (g):
+    Mean:      0.0049
+    Std:       0.0743
+    Min:      -0.4804
+    P01:      -0.1999
+    P50:       0.0000
+    P99:       0.1897
+    Max:       0.4100
+  Lat Accel (g):
+    Mean:     -0.0050
+    Std:       0.0790
+    Min:      -0.4600
+    P01:      -0.3203
+    P50:       0.0000
+    P99:       0.2397
+    Max:       0.4202
+  Yaw Rate (deg/s):
+    Mean:     -0.3295
+    Std:       6.6282
+    Min:     -40.2000
+    P01:     -29.3000
+    P50:       0.0000
+    P99:      21.1000
+    Max:      47.6000
+
+================================================================================
+8. CORRELATION EXPERIMENTS
+================================================================================
+
+--- 8a: Gyro axes vs Vehicle Yaw Rate ---
+  Lag window: +/- 5.0 s
+  Median dt:  100.00 ms
+
+  GYROSCOPE Yaw (rad/s):
+    Zero-lag corr:       +0.0042
+    Best corr (no flip): +0.0075  at lag +2.200 s
+    Best corr (flipped): -0.0007  at lag -4.900 s
+    Sign flip helps:     False
+
+  GYROSCOPE Pitch (rad/s):
+    Zero-lag corr:       +0.5073
+    Best corr (no flip): +0.8642  at lag +1.800 s
+    Best corr (flipped): -0.1150  at lag -5.000 s
+    Sign flip helps:     False
+
+  GYROSCOPE Roll (rad/s):
+    Zero-lag corr:       -0.1050
+    Best corr (no flip): -0.0283  at lag -5.000 s
+    Best corr (flipped): +0.2016  at lag +2.100 s
+    Sign flip helps:     True
+
+--- 8b: Candidate Linear Accel vs Vehicle Acceleration ---
+
+  Against Vehicle Longitudinal Accel (m/s²):
+    Accel X zero-lag: +0.0840  best: +0.1612 @ +1.900 s  flip: +0.0363 @ -5.000 s  [flip helps: False]
+    Accel Y zero-lag: -0.0932  best: +0.0309 @ -5.000 s  flip: +0.1645 @ +1.900 s  [flip helps: True]
+    Accel Z zero-lag: -0.0083  best: +0.0224 @ +2.100 s  flip: +0.0218 @ +1.800 s  [flip helps: False]
+
+  Against Vehicle Lateral Accel (m/s²):
+    Accel X zero-lag: +0.0983  best: +0.1857 @ +1.800 s  flip: -0.0033 @ -3.400 s  [flip helps: False]
+    Accel Y zero-lag: +0.0826  best: +0.1602 @ +1.900 s  flip: -0.0056 @ -5.000 s  [flip helps: False]
+    Accel Z zero-lag: +0.0025  best: +0.0118 @ -3.800 s  flip: +0.0084 @ +1.900 s  [flip helps: False]
+
+--- 8c: Candidate Linear Accel vs Vehicle Acceleration ---
+
+  Against Vehicle Longitudinal Accel (m/s²):
+    LinearAccel X zero-lag: +0.0840  best: +0.1611 @ +1.900 s  flip: +0.0362 @ -5.000 s  [flip helps: False]
+    LinearAccel Y zero-lag: -0.0930  best: +0.0307 @ -5.000 s  flip: +0.1642 @ +1.900 s  [flip helps: True]
+    LinearAccel Z zero-lag: -0.0083  best: +0.0224 @ +2.100 s  flip: +0.0218 @ +1.800 s  [flip helps: False]
+
+  Against Vehicle Lateral Accel (m/s²):
+    LinearAccel X zero-lag: +0.0983  best: +0.1855 @ +1.800 s  flip: -0.0030 @ -3.400 s  [flip helps: False]
+    LinearAccel Y zero-lag: +0.0827  best: +0.1599 @ +1.900 s  flip: -0.0057 @ -5.000 s  [flip helps: False]
+    LinearAccel Z zero-lag: +0.0025  best: +0.0118 @ -3.800 s  flip: +0.0085 @ +1.900 s  [flip helps: False]
+
+--- 8d: Full cross-correlation curves (for plotting) ---
+  GYROSCOPE Yaw (rad/s): peak |corr| = 0.0075 at lag +2.200 s
+  GYROSCOPE Pitch (rad/s): peak |corr| = 0.8642 at lag +1.800 s
+  GYROSCOPE Roll (rad/s): peak |corr| = 0.2016 at lag +2.100 s
+
+================================================================================
+9. TURN-EVENT ANALYSIS
+================================================================================
+  Yaw rate |threshold|: 8.70 deg/s (P90)
+  Turn events found: 290
+  Selected 8 representative events
+
+  Event 1: t=7.40 s, veh yaw rate=+27.30 deg/s, veh vel=7.3 km/h
+    Phone gyro Yaw: -3.3002 deg/s
+    Phone gyro Pitch: +10.0268 deg/s
+    Phone gyro Roll: -0.1604 deg/s
+  Event 2: t=1612.50 s, veh yaw rate=+29.40 deg/s, veh vel=19.0 km/h
+    Phone gyro Yaw: -4.2284 deg/s
+    Phone gyro Pitch: +0.1891 deg/s
+    Phone gyro Roll: +1.6616 deg/s
+  Event 3: t=2630.00 s, veh yaw rate=-33.80 deg/s, veh vel=17.0 km/h
+    Phone gyro Yaw: +1.6558 deg/s
+    Phone gyro Pitch: -2.2173 deg/s
+    Phone gyro Roll: +0.4412 deg/s
+  Event 4: t=3481.00 s, veh yaw rate=+13.50 deg/s, veh vel=7.5 km/h
+    Phone gyro Yaw: +1.2949 deg/s
+    Phone gyro Pitch: +1.4037 deg/s
+    Phone gyro Roll: +0.2177 deg/s
+  Event 5: t=4995.94 s, veh yaw rate=-20.40 deg/s, veh vel=18.8 km/h
+    Phone gyro Yaw: -2.6012 deg/s
+    Phone gyro Pitch: +0.3209 deg/s
+    Phone gyro Roll: +0.3209 deg/s
+  Event 6: t=6525.44 s, veh yaw rate=+12.60 deg/s, veh vel=53.0 km/h
+    Phone gyro Yaw: -2.3950 deg/s
+    Phone gyro Pitch: +3.5008 deg/s
+    Phone gyro Roll: +4.6295 deg/s
+  Event 7: t=8303.94 s, veh yaw rate=-36.50 deg/s, veh vel=20.5 km/h
+    Phone gyro Yaw: +4.7957 deg/s
+    Phone gyro Pitch: -9.0871 deg/s
+    Phone gyro Roll: +2.6299 deg/s
+  Event 8: t=9447.11 s, veh yaw rate=+14.50 deg/s, veh vel=41.0 km/h
+    Phone gyro Yaw: +0.6360 deg/s
+    Phone gyro Pitch: +1.2319 deg/s
+    Phone gyro Roll: +2.4981 deg/s
+
+  Generating turn-event comparison plots...
+  Saved: /home/nikhil/projects/sih/IO-VNBD/sih26168/outputs/turn_event_gyro_comparison.png
+  Generating gyro cross-correlation plot...
+  Saved: /home/nikhil/projects/sih/IO-VNBD/sih26168/outputs/gyro_cross_correlation.png
+  Generating gyro axis time-series comparison...
+  Saved: /home/nikhil/projects/sih/IO-VNBD/sih26168/outputs/gyro_axis_comparison.png
+  Generating accel axis time-series comparison...
+  Saved: /home/nikhil/projects/sih/IO-VNBD/sih26168/outputs/accel_axis_comparison.png
+
+================================================================================
+10. FRAME-MAPPING HYPOTHESIS
+================================================================================
+
+  === Gyro vs Vehicle Yaw Rate Evidence ===
+
+  GYROSCOPE Yaw (rad/s):
+    Best (no flip): r=+0.0075 at lag +2.200 s
+    Best (flipped): r=-0.0007 at lag -4.900 s
+    Flip helps: False
+
+  GYROSCOPE Pitch (rad/s):
+    Best (no flip): r=+0.8642 at lag +1.800 s
+    Best (flipped): r=-0.1150 at lag -5.000 s
+    Flip helps: False
+
+  GYROSCOPE Roll (rad/s):
+    Best (no flip): r=-0.0283 at lag -5.000 s
+    Best (flipped): r=+0.2016 at lag +2.100 s
+    Flip helps: True
+
+  === Candidate Linear Accel vs Vehicle Longitudinal ===
+
+    Accel X: best r=+0.1612 @ +1.900 s  flip r=+0.0363 @ -5.000 s
+    Accel Y: best r=+0.0309 @ -5.000 s  flip r=+0.1645 @ +1.900 s
+    Accel Z: best r=+0.0224 @ +2.100 s  flip r=+0.0218 @ +1.800 s
+
+  === Candidate Linear Accel vs Vehicle Lateral ===
+
+    Accel X: best r=+0.1857 @ +1.800 s  flip r=-0.0033 @ -3.400 s
+    Accel Y: best r=+0.1602 @ +1.900 s  flip r=-0.0056 @ -5.000 s
+    Accel Z: best r=+0.0118 @ -3.800 s  flip r=+0.0084 @ +1.900 s
+
+  === Gravity Vector at Stationary Periods ===
+
+  Stationary samples (veh speed < 1 km/h): 12,944
+  Gravity mean at rest:
+    X: 0.0002 m/s²
+    Y: -0.0001 m/s²
+    Z: 9.8066 m/s²
+    |g|: 9.8066 m/s²
+
+  Interpretation: If phone is flat on dash,
+  the axis with |mean gravity| closest to 9.81
+  is the phone's vertical (Z-up or Z-down).
+  The two near-zero gravity axes are the
+  horizontal plane (phone X-Y).
+
+  === Orientation Ranges ===
+
+    Yaw: range = 360.0 deg, std = 120.7 deg
+    Pitch: range = 161.5 deg, std = 3.1 deg
+    Roll: range = 360.0 deg, std = 150.1 deg
+
+  --- PROPOSED FRAME MAPPING (provisional) ---
+
+  Best gyro match to vehicle yaw rate:
+    GYROSCOPE Pitch (rad/s)  (|r| = 0.8642)
+
+  Best accel match to vehicle longitudinal accel:
+    Accel Y  (r = +0.1645)
+
+  Best accel match to vehicle lateral accel:
+    Accel X  (r = +0.1857)
+
+  NOTE: The phone is mounted in an unknown orientation.
+  The axis labels (X/Y/Z) refer to the PHONE frame,
+  not the vehicle frame. The mapping must be inferred
+  from correlations. Correlation alone cannot distinguish
+  between e.g. phone-X→vehicle-longitudinal vs
+  phone-X→vehicle-lateral if both correlations are
+  similar. We need gravity + dynamic evidence combined.
+
+================================================================================
+11. LATENCY INVESTIGATION
+================================================================================
+
+  Known timestamp synchronization error:
+    Median: ~41 ms
+    Mean:   ~25.6 ms
+    P95:    ~42 ms
+    Max:    ~50 ms
+
+  The cross-correlation lag reflects the COMBINED effect of:
+    1. Timestamp synchronization error (~41 ms)
+    2. Sensor processing latency (unknown)
+    3. Physical sensor response time (typically < 1 ms)
+    4. Android sensor fusion latency (unknown)
+
+  --- Best gyro candidate lags ---
+  GYROSCOPE Yaw (rad/s):
+    Total lag:    +2200.0 ms
+    Est. sensor latency (total - sync): +2159.0 ms (if total > sync)
+
+  GYROSCOPE Pitch (rad/s):
+    Total lag:    +1800.0 ms
+    Est. sensor latency (total - sync): +1759.0 ms (if total > sync)
+
+  GYROSCOPE Roll (rad/s):
+    Total lag:    +2100.0 ms
+    Est. sensor latency (total - sync): +2059.0 ms (if total > sync)
+
+  --- Best accel candidate lags ---
+  Accel X vs vehicle longitudinal: total lag +1900.0 ms
+  Accel Y vs vehicle longitudinal: total lag +1900.0 ms
+  Accel Z vs vehicle longitudinal: total lag +2100.0 ms
+  Accel X vs vehicle lateral: total lag +1800.0 ms
+  Accel Y vs vehicle lateral: total lag +1900.0 ms
+  Accel Z vs vehicle lateral: total lag -3800.0 ms
+
+  INTERPRETATION:
+  If |best_lag| is much larger than ~41 ms, the excess
+  likely represents genuine sensor processing latency.
+  Android's SENSOR_DELAY_GAME typically adds 5-20 ms.
+  Gravity/linear-accel fusion may add more.
+  If the lag is < 50 ms, it is dominated by sync error.
+
+================================================================================
+12. SAVING OUTPUTS
+================================================================================

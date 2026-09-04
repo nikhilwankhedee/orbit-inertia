@@ -1,0 +1,175 @@
+SENSOR LATENCY INVESTIGATION REPORT
+================================================================================
+
+Dataset: S4_synced.csv (NOT MODIFIED)
+Total valid rows: 91,463
+Duration: 9459.9 s
+Median dt: 100.0 ms (10.0 Hz)
+
+LAG CONVENTION:
+  best_lag_s > 0  →  phone signal LAGS vehicle signal
+  best_lag_s < 0  →  phone signal LEADS vehicle signal
+
+SEGMENTS:
+  early (0–1500 s): t=[0, 1500), 15,000 samples
+  pre-gap (1500–3480 s): t=[1500, 3488.0), 19,880 samples
+  post-gap (3870–5500 s): t=[3861.0, 5500), 16,386 samples
+  mid (5500–7500 s): t=[5500, 7500), 19,999 samples
+  late (7500–9380 s): t=[7500, 9380), 18,800 samples
+
+--------------------------------------------------------------------------------
+PER-SEGMENT RESULTS
+--------------------------------------------------------------------------------
+
+Signal Pair                                | Segment                    |    zl_r |  best_r |   lag_s |  flip_r | flip_lag |   w90 |   w50
+------------------------------------------------------------------------------------------------------------------------------------------
+Gyro Pitch vs Veh Yaw Rate                 | early (0–1500 s)           | +0.4306 | +0.9083 |  +1.800 | +0.0642 |   -5.000 |  1.30 |  3.50
+Gyro Yaw vs Veh Yaw Rate                   | early (0–1500 s)           | +0.0142 | +0.0208 |  +2.100 | +0.0023 |   +5.000 |   inf |   inf
+Gyro Roll vs Veh Yaw Rate                  | early (0–1500 s)           | -0.0719 | +0.0144 |  -5.000 | +0.2074 |   +2.100 |   inf |   inf
+GPS Speed vs Veh Velocity                  | early (0–1500 s)           | +0.9191 | +0.9514 |  -2.800 | -0.7500 |   +5.000 |  7.20 | 10.10
+Accel X vs Veh Long Accel                  | early (0–1500 s)           | +0.0936 | +0.1447 |  +2.000 | +0.0334 |   -5.000 |  1.20 |  5.90
+Accel Y vs Veh Long Accel                  | early (0–1500 s)           | -0.2717 | +0.0532 |  -5.000 | +0.4735 |   +1.800 |  0.30 |  1.10
+Accel X vs Veh Lat Accel                   | early (0–1500 s)           | +0.1587 | +0.3462 |  +1.800 | +0.0125 |   -4.900 |  0.60 |  2.90
+Accel Y vs Veh Lat Accel                   | early (0–1500 s)           | +0.0376 | +0.1314 |  +2.000 | +0.0666 |   +5.000 |  0.50 |  2.50
+Gyro Pitch vs Veh Yaw Rate                 | pre-gap (1500–3480 s)      | +0.4648 | +0.9255 |  +1.800 | -0.0321 |   -3.600 |  1.30 |  3.60
+Gyro Yaw vs Veh Yaw Rate                   | pre-gap (1500–3480 s)      | +0.0160 | +0.0346 |  +1.700 | +0.0056 |   -2.900 |   inf |   inf
+Gyro Roll vs Veh Yaw Rate                  | pre-gap (1500–3480 s)      | -0.0854 | -0.0134 |  -3.500 | +0.2264 |   +2.100 |   inf |   inf
+GPS Speed vs Veh Velocity                  | pre-gap (1500–3480 s)      | +0.8785 | +0.9234 |  -2.500 | -0.6109 |   +5.000 |  6.20 | 10.10
+Accel X vs Veh Long Accel                  | pre-gap (1500–3480 s)      | +0.1183 | +0.2307 |  +1.800 | +0.0829 |   -5.000 |  1.00 |  4.90
+Accel Y vs Veh Long Accel                  | pre-gap (1500–3480 s)      | -0.0605 | +0.0128 |  -3.100 | +0.1252 |   +1.800 |   inf |   inf
+Accel X vs Veh Lat Accel                   | pre-gap (1500–3480 s)      | +0.0877 | +0.1747 |  +1.800 | -0.0033 |   -4.900 |  0.90 |  3.10
+Accel Y vs Veh Lat Accel                   | pre-gap (1500–3480 s)      | +0.0786 | +0.1844 |  +1.800 | +0.0127 |   -4.100 |  0.60 |  3.10
+Gyro Pitch vs Veh Yaw Rate                 | post-gap (3870–5500 s)     | +0.6867 | +0.9647 |  +1.800 | -0.3287 |   -5.000 |  1.80 |  6.50
+Gyro Yaw vs Veh Yaw Rate                   | post-gap (3870–5500 s)     | -0.0030 | +0.0125 |  +4.400 | +0.0035 |   -0.200 |   inf |   inf
+Gyro Roll vs Veh Yaw Rate                  | post-gap (3870–5500 s)     | -0.2540 | -0.1342 |  -5.000 | +0.3859 |   +2.100 |   inf |   inf
+GPS Speed vs Veh Velocity                  | post-gap (3870–5500 s)     | +0.9084 | +0.9457 |  -2.800 | -0.7470 |   +5.000 |  7.00 | 10.10
+Accel X vs Veh Long Accel                  | post-gap (3870–5500 s)     | +0.0869 | +0.2430 |  +1.900 | +0.0556 |   -3.400 |  1.00 |  3.90
+Accel Y vs Veh Long Accel                  | post-gap (3870–5500 s)     | -0.0562 | +0.0085 |  +5.000 | +0.0643 |   -1.200 |   inf |   inf
+Accel X vs Veh Lat Accel                   | post-gap (3870–5500 s)     | +0.0962 | +0.1798 |  +2.200 | -0.0150 |   -3.400 |  1.70 |  5.20
+Accel Y vs Veh Lat Accel                   | post-gap (3870–5500 s)     | +0.0891 | +0.1834 |  +1.900 | -0.0290 |   -2.700 |  1.40 |  5.00
+Gyro Pitch vs Veh Yaw Rate                 | mid (5500–7500 s)          | +0.5528 | +0.8130 |  +1.800 | -0.1749 |   -3.600 |  1.80 |  5.20
+Gyro Yaw vs Veh Yaw Rate                   | mid (5500–7500 s)          | -0.0036 | +0.0060 |  -2.700 | +0.0050 |   +5.000 |   inf |   inf
+Gyro Roll vs Veh Yaw Rate                  | mid (5500–7500 s)          | -0.0937 | -0.0329 |  -3.300 | +0.1570 |   +1.900 |   inf |   inf
+GPS Speed vs Veh Velocity                  | mid (5500–7500 s)          | +0.9719 | +0.9840 |  -2.800 | -0.9020 |   +5.000 | 10.10 | 10.10
+Accel X vs Veh Long Accel                  | mid (5500–7500 s)          | -0.0109 | +0.0116 |  -5.000 | +0.0521 |   +3.400 |   inf |   inf
+Accel Y vs Veh Long Accel                  | mid (5500–7500 s)          | -0.0654 | +0.0721 |  -5.000 | +0.1643 |   +1.900 |  0.70 |  2.00
+Accel X vs Veh Lat Accel                   | mid (5500–7500 s)          | +0.1585 | +0.2593 |  +1.900 | -0.0153 |   -3.400 |  1.40 |  4.30
+Accel Y vs Veh Lat Accel                   | mid (5500–7500 s)          | +0.0797 | +0.0914 |  +2.000 | -0.0297 |   +5.000 |  2.70 |  6.30
+Gyro Pitch vs Veh Yaw Rate                 | late (7500–9380 s)         | +0.4780 | +0.9145 |  +1.800 | +0.0356 |   -3.100 |  1.40 |  3.80
+Gyro Yaw vs Veh Yaw Rate                   | late (7500–9380 s)         | -0.0046 | +0.0030 |  -1.500 | +0.0123 |   +1.900 |   inf |   inf
+Gyro Roll vs Veh Yaw Rate                  | late (7500–9380 s)         | -0.1407 | +0.0068 |  -2.900 | +0.2947 |   +2.100 |   inf |   inf
+GPS Speed vs Veh Velocity                  | late (7500–9380 s)         | +0.9321 | +0.9579 |  -2.600 | -0.7850 |   +5.000 |  7.70 | 10.10
+Accel X vs Veh Long Accel                  | late (7500–9380 s)         | +0.1211 | +0.2234 |  +1.900 | +0.0193 |   -5.000 |  1.20 |  5.10
+Accel Y vs Veh Long Accel                  | late (7500–9380 s)         | -0.0765 | +0.0491 |  -5.000 | +0.1091 |   +1.400 |   inf |   inf
+Accel X vs Veh Lat Accel                   | late (7500–9380 s)         | +0.0857 | +0.1530 |  +1.700 | +0.0403 |   -5.000 |  1.10 |  3.70
+Accel Y vs Veh Lat Accel                   | late (7500–9380 s)         | +0.1042 | +0.2007 |  +1.900 | +0.0156 |   -5.000 |  1.40 |  5.10
+
+--------------------------------------------------------------------------------
+LAG STATISTICS ACROSS SEGMENTS
+--------------------------------------------------------------------------------
+
+  Gyro Pitch vs Veh Yaw Rate
+    Reliable segments: 5/5
+    Median lag:  +1.800 s
+    IQR lag:     0.000 s
+    Std lag:     0.000 s
+    Range:       0.000 s
+    Median peak width (90%): 1.40 s
+    Median peak width (50%): 3.80 s
+    Per-segment lags: ['+1.80', '+1.80', '+1.80', '+1.80', '+1.80']
+
+  Gyro Yaw vs Veh Yaw Rate
+    Reliable segments: 0/5
+    Median lag:  +1.900 s
+    IQR lag:     0.400 s
+    Std lag:     2.307 s
+    Range:       7.100 s
+    Median peak width (90%): nan s
+    Median peak width (50%): nan s
+    Per-segment lags: ['+2.10', '+1.70', '+4.40', '-2.70', '+1.90']
+
+  Gyro Roll vs Veh Yaw Rate
+    Reliable segments: 5/5
+    Median lag:  +2.100 s
+    IQR lag:     0.000 s
+    Std lag:     0.080 s
+    Range:       0.200 s
+    Median peak width (90%): nan s
+    Median peak width (50%): nan s
+    Per-segment lags: ['+2.10', '+2.10', '+2.10', '+1.90', '+2.10']
+
+  GPS Speed vs Veh Velocity
+    Reliable segments: 5/5
+    Median lag:  -2.800 s
+    IQR lag:     0.200 s
+    Std lag:     0.126 s
+    Range:       0.300 s
+    Median peak width (90%): 7.20 s
+    Median peak width (50%): 10.10 s
+    Per-segment lags: ['-2.80', '-2.50', '-2.80', '-2.80', '-2.60']
+
+  Accel X vs Veh Long Accel
+    Reliable segments: 4/5
+    Median lag:  +1.900 s
+    IQR lag:     0.050 s
+    Std lag:     0.071 s
+    Range:       0.200 s
+    Median peak width (90%): 1.10 s
+    Median peak width (50%): 5.00 s
+    Per-segment lags: ['+2.00', '+1.80', '+1.90', '+1.90']
+
+  Accel Y vs Veh Long Accel
+    Reliable segments: 4/5
+    Median lag:  +1.800 s
+    IQR lag:     0.125 s
+    Std lag:     0.192 s
+    Range:       0.500 s
+    Median peak width (90%): 0.50 s
+    Median peak width (50%): 1.55 s
+    Per-segment lags: ['+1.80', '+1.80', '+1.90', '+1.40']
+
+  Accel X vs Veh Lat Accel
+    Reliable segments: 5/5
+    Median lag:  +1.800 s
+    IQR lag:     0.100 s
+    Std lag:     0.172 s
+    Range:       0.500 s
+    Median peak width (90%): 1.10 s
+    Median peak width (50%): 3.70 s
+    Per-segment lags: ['+1.80', '+1.80', '+2.20', '+1.90', '+1.70']
+
+  Accel Y vs Veh Lat Accel
+    Reliable segments: 4/5
+    Median lag:  +1.900 s
+    IQR lag:     0.050 s
+    Std lag:     0.071 s
+    Range:       0.200 s
+    Median peak width (90%): 1.40 s
+    Median peak width (50%): 5.00 s
+    Per-segment lags: ['+2.00', '+1.80', '+1.90', '+1.90']
+
+--------------------------------------------------------------------------------
+CROSS-MODALITY COMPARISON
+--------------------------------------------------------------------------------
+
+  Gyro Pitch vs Veh Yaw Rate                median=+1.800  std=0.000  range=[+1.800, +1.800]
+  GPS Speed vs Veh Velocity                 median=-2.800  std=0.126  range=[-2.800, -2.500]
+  Accel X vs Veh Lat Accel                  median=+1.800  std=0.172  range=[+1.700, +2.200]
+  Accel Y vs Veh Long Accel                 median=+1.800  std=0.192  range=[+1.400, +1.900]
+
+--------------------------------------------------------------------------------
+INTERPRETATION
+--------------------------------------------------------------------------------
+
+  Median lags across key modalities: ['Gyro Pitch vs Veh Yaw Rate: +1.800s', 'GPS Speed vs Veh Velocity: -2.800s', 'Accel Y vs Veh Long Accel: +1.800s', 'Accel X vs Veh Lat Accel: +1.800s']
+  Overall median: +1.800 s
+  Cross-modality range: 4.600 s
+
+  RESULT C: Lags are INCONSISTENT across modalities.
+  Different sensor pairs show materially different lags.
+  A single global timing correction is NOT justified.
+  Investigate modality-specific latency.
+
+================================================================================
+END OF REPORT
+================================================================================

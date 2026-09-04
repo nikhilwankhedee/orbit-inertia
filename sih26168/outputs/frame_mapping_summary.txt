@@ -1,0 +1,21 @@
+FRAME MAPPING SUMMARY
+============================================================
+
+Best gyro ↔ vehicle yaw rate: GYROSCOPE Pitch (rad/s)
+  |correlation| = 0.8642
+
+Best accel ↔ vehicle longitudinal: Accel Y
+  correlation = +0.1645
+
+Best accel ↔ vehicle lateral: Accel X
+  correlation = +0.1857
+
+Gravity at stationary periods:
+  X: 0.0002 m/s²
+  Y: -0.0001 m/s²
+  Z: 9.8066 m/s²
+
+Latency estimates:
+  GYROSCOPE Yaw (rad/s): +2200.0 ms total
+  GYROSCOPE Pitch (rad/s): +1800.0 ms total
+  GYROSCOPE Roll (rad/s): +2100.0 ms total

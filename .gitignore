@@ -1,0 +1,39 @@
+# Large data files
+processed/*.csv
+processed/*.csv.bak
+*.zip
+*.tar.gz
+
+# Model checkpoints and normalization
+*.pt
+*.pth
+*.npz
+*.onnx
+
+# Binary outputs
+*.png
+*.jpg
+*.jpeg
+*.gif
+!Synchronised*/**/*.jpg
+!Unsynchronised*/**/*.jpg
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Kaggle / training artifacts
+outputs/ml/best_model.pt
+outputs/ml/normalization.npz
+outputs/ml/training_log.csv
