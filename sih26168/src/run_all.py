@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 """
-Kaggle one-shot runner: train + evaluate velocity residual GRU (SIH26168)
-=========================================================================
+Kaggle one-shot runner: train + evaluate residual GRUs (SIH26168)
+=================================================================
 
 Clones (already done by notebook) the orbit-inertia repo to the working dir,
-then trains and evaluates the GRU in one command.
+then trains and evaluates GRU variants in one command.
 
 Usage (Kaggle notebook cell):
   !git clone --depth 1 https://github.com/nikhilwankhedee/orbit-inertia.git
   !python orbit-inertia/sih26168/src/run_all.py \
       --data-root /kaggle/input/<your-dataset>
+
+Variants:
+  --variant v0   V0 (16-feature, vehicle-CAN) train + teacher + recursive eval
+  --variant v02  V0.2 (9-feature, phone-only) train + recursive + oracle eval
+  --variant all  both (default: v0 for backward compatibility)
 
 Expects the S4 dataset mounted at /kaggle/input/<your-dataset>/S4_synced.csv
 (or <your-dataset>/processed/S4_synced.csv).
@@ -25,6 +30,9 @@ def main():
     parser = argparse.ArgumentParser(description="Train + evaluate in one shot")
     parser.add_argument("--data-root", type=str, required=True,
                         help="Kaggle dataset mount path, e.g. /kaggle/input/sih26168")
+    parser.add_argument("--variant", type=str, default="v0",
+                        choices=["v0", "v02", "all"],
+                        help="Pipeline variant to run (default: v0)")
     parser.add_argument("--epochs", type=int, default=200)
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--hidden-size", type=int, default=32)
@@ -40,6 +48,7 @@ def main():
     print("ORBIT-INERTIA KAGGLE RUNNER")
     print("=" * 70)
     print(f"  Data root: {args.data_root}")
+    print(f"  Variant:   {args.variant}")
     print(f"  Source:    {src_dir}")
 
     # Locate the CSV. Accept either the dataset dir OR the CSV file itself
@@ -66,65 +75,53 @@ def main():
     # Resolve the dataset directory to pass to child scripts
     data_dir = str(csv_path.parent)
 
-    # ── Step 1: Train ──
-    print("\n" + "=" * 70)
-    print("STEP 1: TRAIN")
-    print("=" * 70)
-    train_cmd = [
-        sys.executable, str(src_dir / "train_velocity_residual_gru.py"),
-        "--data-root", data_dir,
-        "--context-len", str(args.context_len),
-        "--stride", str(args.stride),
-        "--hidden-size", str(args.hidden_size),
-        "--epochs", str(args.epochs),
-        "--batch-size", str(args.batch_size),
-        "--seed", str(args.seed),
-    ]
-    print(f"  Running: {' '.join(train_cmd)}")
-    r = subprocess.run(train_cmd, cwd=src_dir.parents[1])
-    if r.returncode != 0:
-        print("\n*** Training failed. Aborting.")
-        sys.exit(1)
+    def run(step_name, script, extra):
+        print("\n" + "=" * 70)
+        print(f"STEP {step_name}")
+        print("=" * 70)
+        cmd = [sys.executable, str(src_dir / script),
+               "--data-root", data_dir, *extra,
+               "--context-len", str(args.context_len),
+               "--seed", str(args.seed)]
+        print(f"  Running: {' '.join(cmd)}")
+        r = subprocess.run(cmd, cwd=repo_dir.parent)
+        if r.returncode != 0:
+            print(f"\n*** {step_name} failed. Aborting.")
+            sys.exit(1)
 
-    # ── Step 2: Evaluate ──
-    print("\n" + "=" * 70)
-    print("STEP 2: EVALUATE")
-    print("=" * 70)
-    eval_cmd = [
-        sys.executable, str(src_dir / "evaluate_velocity_residual_gru.py"),
-        "--data-root", data_dir,
-        "--model-path", str(repo_dir / "outputs" / "ml" / "best_model.pt"),
-        "--norm-path", str(repo_dir / "outputs" / "ml" / "normalization.npz"),
-        "--context-len", str(args.context_len),
-        "--seed", str(args.seed),
-    ]
-    r = subprocess.run(eval_cmd, cwd=src_dir.parents[1])
-    if r.returncode != 0:
-        print("\n*** Evaluation failed.")
-        sys.exit(1)
+    common = ["--hidden-size", str(args.hidden_size),
+              "--epochs", str(args.epochs),
+              "--batch-size", str(args.batch_size)]
+    train_extra = [*common, "--stride", str(args.stride)]
 
-    # ── Step 3: Recursive (deployment-like) evaluation ──
-    print("\n" + "=" * 70)
-    print("STEP 3: RECURSIVE (DEPLOYMENT-LIKE) EVALUATION")
-    print("=" * 70)
-    rec_cmd = [
-        sys.executable, str(src_dir / "evaluate_recursive_gru.py"),
-        "--data-root", data_dir,
-        "--model-path", str(repo_dir / "outputs" / "ml" / "best_model.pt"),
-        "--norm-path", str(repo_dir / "outputs" / "ml" / "normalization.npz"),
-        "--context-len", str(args.context_len),
-        "--seed", str(args.seed),
-    ]
-    print(f"  Running: {' '.join(rec_cmd)}")
-    r = subprocess.run(rec_cmd, cwd=src_dir.parents[1])
-    if r.returncode != 0:
-        print("\n*** Recursive evaluation failed.")
-        sys.exit(1)
+    if args.variant in ("v0", "all"):
+        run("1: TRAIN (V0 16-feature)",
+            "train_velocity_residual_gru.py", train_extra)
+        run("2: EVALUATE (V0 teacher)",
+            "evaluate_velocity_residual_gru.py",
+            ["--model-path", str(repo_dir / "outputs" / "ml" / "best_model.pt"),
+             "--norm-path", str(repo_dir / "outputs" / "ml" / "normalization.npz")])
+        run("3: RECURSIVE EVALUATION (V0.1 audit)",
+            "evaluate_recursive_gru.py",
+            ["--model-path", str(repo_dir / "outputs" / "ml" / "best_model.pt"),
+             "--norm-path", str(repo_dir / "outputs" / "ml" / "normalization.npz")])
+
+    if args.variant in ("v02", "all"):
+        v02_out = str(repo_dir / "outputs" / "ml_v02")
+        run("4: TRAIN (V0.2 phone-only)",
+            "train_velocity_residual_gru_v02.py",
+            [*train_extra, "--out-dir", v02_out])
+        run("5: EVALUATE (V0.2 recursive + oracle)",
+            "evaluate_velocity_residual_gru_v02.py",
+            ["--model-path", str(Path(v02_out) / "best_model.pt"),
+             "--norm-path", str(Path(v02_out) / "normalization.npz"),
+             "--out-dir", v02_out])
 
     print("\n" + "=" * 70)
     print("PIPELINE COMPLETE")
     print("=" * 70)
-    print("  Outputs in outputs/ml/ and outputs/ml/recursive/")
+    print("  V0  outputs in outputs/ml/ and outputs/ml/recursive/")
+    print("  V0.2 outputs in outputs/ml_v02/")
 
 
 if __name__ == "__main__":

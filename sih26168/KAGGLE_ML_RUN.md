@@ -86,7 +86,67 @@ python /kaggle/working/sih26168/src/run_all.py \
     --data-root /kaggle/input/sih26168
 ```
 
-Runs Step 1 → 2 → 3 sequentially.
+Runs Step 1 → 2 → 3 sequentially. Use `--variant v02` to run the V0.2
+phone-only pipeline instead (step 4 → 5), or `--variant all` for everything.
+
+---
+
+## V0.2 — Deployment-Valid Phone-Only GRU (recursive from scratch)
+
+After the V0.1 recursive audit (CASE B, avg +8.6%), the 16-feature checkpoint
+is NOT deployment-valid (vehicle-CAN inputs unavailable in a GNSS-denied phone
+deployment; teacher-style +40.5% partially leaked). V0.2 retrains from scratch
+on **9 strictly phone-only features** and is evaluated fully recursively.
+
+### Commands (Kaggle GPU)
+
+```bash
+# preferred: one-shot runner
+python /kaggle/working/sih26168/src/run_all.py \
+    --data-root /kaggle/input/sih26168 \
+    --variant v02 \
+    --epochs 200 --batch-size 256 --context-len 20 --stride 5 --seed 42
+
+# or manually:
+python .../src/train_velocity_residual_gru_v02.py --data-root ... --out-dir .../outputs/ml_v02
+python .../src/evaluate_velocity_residual_gru_v02.py --model-path .../best_model.pt --norm-path .../normalization.npz --out-dir .../outputs/ml_v02
+```
+
+Outputs in `outputs/ml_v02/`: `best_model.pt`, `normalization.npz`,
+`train_config.json`, `training_log.csv`, `training_report.txt`,
+`recursive_evaluation_report.txt`, `v02_report.txt` (15-item), `recursive_comparison.csv`,
+`plots/v02_{position_error_{10,30,60,120}s,final_error,three_way_mae,correction_magnitude,pred_vs_target}.png`
+
+### Feature Set (9) — phone-only + internal nav state
+
+| # | Feature | Source | During GNSS-denied deployment? |
+|---|---------|--------|-------------------------------|
+| 0–2 | accel_x/y/z | Phone IMU | measured |
+| 3–5 | gravity_x/y/z | Phone IMU | measured |
+| 6 | gyro_pitch (rad/s) | Phone IMU | measured |
+| 7 | nav_speed (km/h) | internal A0 speed (constant per segment) | propagated |
+| 8 | nav_heading (rad) | internal gyro-integrated | propagated |
+
+- No vehicle CAN, no future GPS, no ground-truth velocity/heading as input.
+- **Recursive state:** `v_corrected = v_classical + Δv_GRU`; heading gyro-integrated;
+  position accumulated from `v_corrected`. The nav_speed/nav_heading inputs fed back
+  are the A0 classical state — identical to the training-time feature definition, so
+  there is no train/deploy state-channel shift (V0.1 root cause).
+- **Oracle-state rollout** (nav channels swapped to recorded reference under
+  blackout) is a labelled **DIAGNOSTIC ONLY** teacher-style upper bound.
+- Same 39 blackout windows / durations (10/30/60/120 s) as V0/V0.1.
+
+### Architecture
+
+```
+9 features → GRU (1 layer, hidden=32) → Linear(2)   (4,194 parameters)
+```
+
+### Local smoke only — NOT scientific
+
+Local runs verified the pipeline end-to-end (data shapes, 2-epoch fit, 4-window
+recursive eval, all plots/reports). **The scientific V0.2 result requires the
+full 200-epoch Kaggle GPU run** — local smoke metrics are excluded from reports.
 
 ## Architecture
 

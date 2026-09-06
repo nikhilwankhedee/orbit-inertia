@@ -70,6 +70,23 @@ To run training and evaluation separately (e.g. to tweak evaluation):
     --data-root /kaggle/input/sih26168
 ```
 
+## V0.2 — Deployment-Valid Phone-Only GRU (recommended run)
+
+Use `kaggle_run_v02.ipynb` instead — it clones the repo, finds the dataset mount
+automatically, runs the V0.2 pipeline in one shot, and prints the recursive
+verdict. Equivalent command:
+
+```python
+!python orbit-inertia/sih26168/src/run_all.py \
+    --data-root /kaggle/input/sih26168 \
+    --variant v02 \
+    --epochs 200 --batch-size 256 --hidden-size 32 --context-len 20 --stride 5 --seed 42
+```
+
+Outputs land in `orbit-inertia/outputs/ml_v02/` (`v02_report.txt` 15-item report,
+`recursive_evaluation_report.txt`, plots). **Recursive is the primary result; the
+oracle-state rollout in the evaluation is DIAGNOSTIC ONLY.**
+
 ## Requirements
 
 - Python 3.10+

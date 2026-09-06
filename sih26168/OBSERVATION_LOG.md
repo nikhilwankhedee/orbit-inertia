@@ -900,10 +900,10 @@ APP
 
 ## 2026-09-04 — V0 GRU Recursive Rollout Evaluation
 
-### Status: PENDING KAGGLE RUN
+### Status: COMPLETE — CASE B VERDICT (recursive weak)
 
-Implementation complete and pushed. Local smoke test passed (2 windows, 10 s —
-labelled NOT scientific). Full 39-window recursive evaluation runs on Kaggle.
+Full 39-window recursive evaluation ran clean on Kaggle ("PIPELINE COMPLETE",
+422 s wall time). Results downloaded and analyzed below.
 
 ### Objective
 
@@ -972,13 +972,59 @@ retraining experiment is a phone-only feature set
 
 ### Result
 
-NOT AVAILABLE — pending Kaggle run.
+| Dur | A0 MAE | Teacher MAE | Recursive MAE | Teacher Δ% vs A0 | Recursive Δ% vs A0 |
+| --- | ------ | ----------- | ------------- | ---------------- | ------------------- |
+| 10s |  49.8m | 30.4m | 33.5m | +38.9% | +32.7% |
+| 30s |  82.7m | 45.7m | 96.4m | +44.7% | **-16.6%** |
+| 60s | 244.4m | 161.3m | 240.5m | +34.0% | +1.6% |
+|120s | 536.6m | 298.2m | 447.1m | +44.4% | +16.7% |
+
+- Teacher avg improvement vs A0: **+40.5%**; Recursive avg improvement: **+8.6%**.
+- Mean recursive/teacher MAE ratio: **1.55x**.
+- Recursive only clearly helps at 10s (+32.7%) and 120s (+16.7%); it is
+  effectively neutral at 60s (+1.6%) and WORSE than classical A0 at 30s (-16.6%).
+- RMSE shows the same pattern (30s: A0 97.7 → Rec 116.1; teacher 51.3).
+- Checkpoint: epoch 40, val_loss 0.5702 (same V0 checkpoint; no retraining).
 
 ### Interpretation
 
-Pending. Deliverable structure supports CASE A (strong recursive) / CASE B
-(teacher strong, recursive weak) / CASE C (recursive worse than A0) verdicts
-in `recursive_v0_report.txt`.
+**CASE B — teacher strong (+40.5%), recursive weak (+8.6%, 1.55x teacher MAE).**
+
+The learned correction does not transfer to a truly recursive, deployment-like
+rollout. The improvement collapses, and error compounding / distribution shift
+makes the model neutral or harmful at mid durations. The V0 checkpoint is NOT
+deployment-valid, and the 34–45% teacher claim was partially inflated by
+reference leakage (recorded CAN velocity/heading read during the blackout).
+
+Root-cause hypotheses to investigate (not yet isolated):
+1. Model dependence on reference-like state/context during blackout (leakage-trained
+   weights rely on near-truth velocity/heading inputs).
+2. Recursive substitution mismatch — internal speed `|v|`, gyro-integrated
+   heading, and held wheel-speed/steering channels are a distribution shift from
+   the training-time CAN features the model expects.
+3. Error accumulation — the model is not trained on its own recursive trajectory,
+   so inputs drift on out-of-distribution after a few seconds (esp. 30s).
+4. Target formulation (2-D EN residual) remains an empirical construct; frame
+   mapping unresolved.
+
+### Decision
+
+- No further multi-trajectory validation with the V0 16-feature checkpoint —
+  its inputs (vehicle CAN) are unavailable in a real GNSS-denied phone deployment.
+- Proceed to **minimum retraining on strict phone-only features**
+  (`DEPLOYMENT_FEATURE_KEYS`: 7 phone-measured + nav_speed + nav_heading) and
+  re-run the recursive evaluation on the new checkpoint. Only a CASE A result
+  from a phone-only model justifies multi-trajectory validation.
+- Diagnostic focus if the phone-only run also fails: feature/state/target
+  formulation (frame mapping remains the biggest unresolved issue).
+
+### Files
+
+- `outputs/ml/recursive/recursive_v0_report.txt` — full CASE A/B/C report
+- `outputs/ml/recursive/recursive_comparison.csv` — per-window metrics (39)
+- `outputs/ml/recursive/rec_three_way_mae.png`, `rec_teacher_vs_recursive_final.png`,
+  `rec_position_error_{10,30,60,120}s.png`, `rec_velocity_error.png`
+- `outputs/kaggle_recursive_v01/` — raw downloaded kernel outputs + `sih-2026.log`
 
 ### Limitations
 
@@ -990,7 +1036,114 @@ in `recursive_v0_report.txt`.
 
 ### Next Action
 
-1. Re-run Kaggle notebook (fresh clone) → STEP 3 produces recursive results.
-2. Download outputs → update this entry with results + CASE verdict.
-3. If CASE A → phone-only retrain + multi-trajectory validation.
-4. If CASE B/C → diagnose feature/state/target/frame before further training.
+1. NEW CHECKPOINT REQUIRED — retrain on strict phone-only features
+   (`DEPLOYMENT_FEATURE_KEYS`, 9-dim) since V0's 16-dim input (vehicle CAN) is
+   unavailable in a real GNSS-denied phone deployment.
+2. Re-run recursive evaluation on the phone-only checkpoint.
+3. Only a CASE A result from the phone-only model → multi-trajectory validation.
+4. Otherwise → diagnose feature/state/target/frame (frame mapping unresolved).
+
+---
+
+## 2026-09-05 — V0.2 Deployment-Valid Phone-Only GRU
+
+### Status: CODE COMPLETE — KAGGLE GPU RUN PENDING (smoke tests only so far)
+
+### Objective
+
+Retrain from scratch on strictly **deployment-available** smartphone features
+(no vehicle CAN), then evaluate *fully recursively* under GNSS-denied rollout.
+Can a small causal GRU learn a velocity residual from phone-only input and keep
+the improvement during recursive rollout (vs classical A0) after V0.1 found the
+16-feature V0 checkpoint NOT deployment-valid (CASE B, avg +8.6%)?
+
+### Leakage removed vs V0
+
+- V0 trained on 16 features incl. vehicle CAN; teacher eval read recorded
+  reference channels during the blackout → inflated +40.5% teacher claim.
+- V0.2: NO vehicle-reference inputs at all. Inputs during blackout are only the
+  7 phone-IMU channels + internally propagated nav_speed/nav_heading.
+
+### Feature Formulation (9-dim input)
+
+| # | Feature | Source | During GNSS-denied deployment? |
+|---|---------|--------|-------------------------------|
+| 0–2 | accel_x/y/z | Phone IMU | measured |
+| 3–5 | gravity_x/y/z | Phone IMU | measured |
+| 6 | gyro_pitch (rad/s) | Phone IMU | measured |
+| 7 | nav_speed (km/h) | **internal** A0 speed (constant per segment) | propagated |
+| 8 | nav_heading (rad) | **internal** gyro-integrated | propagated |
+
+- Phone GPS is used ONLY for initialization (segment start veh_velocity/veh_heading),
+  target construction and evaluation — never an input during blackout.
+- nav_speed + nav_heading at training time == the same channels the recursive
+  rollout feeds back (identical distribution by construction), removing the
+  V0.1 substitution mismatch without an imitation-learning framework.
+
+### Target
+
+- Δv (m/s) = v_reference_EN − v_classical_A0_EN (2-D EN residual), keys
+  delta_ve/delta_vn. Reference (recorded vehicle GPS) only for target + eval.
+
+### Training Methodology
+
+- Architecture: 1-layer GRU hidden=32 → Linear(2); 4,194 params.
+  Causal window 20 samples (~2 s @10 Hz), stride 5.
+- Split: TRAIN Seg0+Seg1 (9,631 windows), VAL Seg2 (8,551), TEST Seg3 (97).
+  Windows never cross segments. No SWEEP — one clean run.
+- Normalization z-score fit on TRAINING windows only, saved to normalization.npz.
+- Adam lr=1e-3 wd=1e-4, MSE, grad-clip 1.0, ReduceLROnPlateau, early-stopping
+  patience 20, seed 42, best-val checkpoint.
+- Recursive training consideration: model only ever sees the A0 classical state
+  (its own propagation source), so train/deploy input distribution is identical;
+  no complex imitation learning required.
+
+### Recursive Evaluation Methodology
+
+- Same 39 blackout windows / durations (10/30/60/120 s) as V0/V0.1 via
+  `ml_common.select_blackout_windows` (identical selection criteria).
+- A0 reproduced on same windows; GRU evaluated step-by-step-causal:
+  propagate classical → predict Δv → v_corrected = v_classical + Δv →
+  integrate position → feed v_corrected-derived nav_speed + gyro-integrated
+  heading into the next timestep. Ground truth only for scoring.
+- Oracle-state rollout (nav channels swapped to recorded reference during
+  blackout) kept as the teacher-style upper bound — DIAGNOSTIC ONLY.
+- Metrics per duration: position MAE/RMSE/max/final, velocity MAE/RMSE,
+  heading MAE, position error vs time, recursive correction magnitude.
+- Verdict logic: CASE A if recursive mean improvement ≥ 0 and ≥ 0.5× oracle
+  improvement; CASE C if recursive < 0; else CASE B.
+
+### Files
+
+- `src/ml_v02_common.py` — features/targets/normalization/dataset/recursive rollout
+- `src/train_velocity_residual_gru_v02.py` — training + checkpoint/report outputs
+- `src/evaluate_velocity_residual_gru_v02.py` — recursive + oracle eval, plots, reports
+- `src/run_all.py` — `--variant {v0, v02, all}` (v0 default, backwards compatible)
+- `official_v02/` artifacts land in `outputs/ml_v02/`:
+  `best_model.pt`, `normalization.npz`, `train_config.json`, `training_log.csv`,
+  `training_report.txt`, `recursive_evaluation_report.txt`, `v02_report.txt`,
+  `plots/v02_*.png`, `recursive_comparison.csv`
+
+### Kaggle Execution (PENDING)
+
+```bash
+# attached dataset = processed/S4_synced.csv (repo: orbit-inertia/sih26168)
+python orbit-inertia/sih26168/src/run_all.py \
+    --data-root /kaggle/input/<dataset-slug> \
+    --variant v02 \
+    --epochs 200 --batch-size 256 --hidden-size 32 --context-len 20 --seed 42
+# download outputs/ml_v02/ → official_v02/
+```
+
+### Results
+
+PENDING — must not be fabricated. Local smoke tests verified the pipeline only
+(imports, data shapes, tiny 2-epoch model, 4-window recursive eval); smoke
+metrics are NOT scientific and are excluded from this log.
+
+### Interpretation / Next Action (to update after Kaggle run)
+
+- CASE A (positive, consistent recursive improvement) → broaden multi-trajectory
+  validation.
+- CASE B/C → diagnose state/frame/target formulation before any complexity
+  increase (frame mapping remains unresolved; nav_speed constant-channel coarse).

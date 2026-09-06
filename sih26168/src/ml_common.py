@@ -628,19 +628,17 @@ def select_blackout_windows(
             if seg["duration_s"] < needed_s + 5:
                 continue
 
+            seg_ts = data["sync_time"][s:e]
             valid_starts = []
             for i in range(s, e - 10):
                 t_start = data["sync_time"][i]
-                pre_mask = (
-                    (data["sync_time"][s:e] >= t_start - 10)
-                    & (data["sync_time"][s:e] < t_start)
-                )
-                if pre_mask.sum() < 10:
+                lo = np.searchsorted(seg_ts, t_start - 10, side="left")
+                hi = np.searchsorted(seg_ts, t_start, side="left")
+                if hi - lo < 10:
                     continue
-                if np.median(seg_vel[pre_mask]) < MIN_MOTION_THRESHOLD:
+                if np.median(seg_vel[lo:hi]) < MIN_MOTION_THRESHOLD:
                     continue
-                pre_acc = data["phone_acc"][s:e][pre_mask]
-                if np.median(pre_acc) > MAX_GPS_ACCURACY:
+                if np.median(data["phone_acc"][s:e][lo:hi]) > MAX_GPS_ACCURACY:
                     continue
 
                 j = i
